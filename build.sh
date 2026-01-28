@@ -1,24 +1,31 @@
 #!/bin/sh
 set -eu
 
+# Toolchain
 CC=clang
+
+# Files
 SRC=main.c
 OUT=main
 
+# Include paths
+INCLUDES="-I."
 
-$CC \
-  -Wall -Wextra \
-	-v \
-  "$SRC" \
-  -o "$OUT" \
-  -lX11 \
-	-lm	
-echo
+# Compiler flags
+CFLAGS="
+-g
+-O0
+"
 
-echo "== Binary info =="
-file "$OUT"
-ldd "$OUT"
-echo
+# Linker flags
+LDFLAGS="
+-lX11
+-I.
+-lm
+"
 
-echo "== Running =="
-LD_DEBUG=libs ./"$OUT"
+echo "==> Building $OUT"
+$CC $CFLAGS $INCLUDES "$SRC" -o "$OUT" $LDFLAGS
+
+echo "==> Running $OUT"
+./"$OUT"

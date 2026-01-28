@@ -4,231 +4,254 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdio.h>
 
-#define NIL (0)
+#include "base/base.h"
+#include "base/base_arena.h"
 
-#define internal static
-#define global static
-#define local static
+#include "base/base.c"
+#include "base/base_arena.c"
 
-typedef uint64_t u64;
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint8_t u8;
 
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-
-typedef float f32;
-typedef double f64;
-
-typedef i16 b16;
-typedef i32 b32;
+#define NIL 0
 
 typedef struct
 {
-  i32 x;
-  i32 y;
-  u32 height;
-  u32 width;
-  u32 border_width;
-  i32 window_depth;
-  u32 window_class;
-  u64 value_mask;
+i32 x;
+i32 y;
+u32 height;
+u32 width;
+u32 border_width;
+i32 window_depth;
+u32 window_class;
+u64 value_mask;
 
 } WindowProperties;
 
 typedef struct
 {
-  i32 x;
-  i32 y;
-  i32 z;
+i32 x;
+i32 y;
+i32 z;
 
 } vertex;
 
 void
 sleep_ms(long ms)
 {
-  struct timespec ts;
-  ts.tv_sec = ms / 1000;
-  ts.tv_nsec = (ms % 1000) * 1000000L;
+struct timespec ts;
+ts.tv_sec = ms / 1000;
+ts.tv_nsec = (ms % 1000) * 1000000L;
 
-  while (nanosleep(&ts, &ts))
-  {
-    NULL;
-  }
+while (nanosleep(&ts, &ts))
+{
+NULL;
+}
 }
 
 void
 move_down(double *y)
 {
-  ++*y;
+++*y;
 }
 
 void
 move_up(double *y)
 {
-  --*y;
+--*y;
+}
+
+void
+move_left(double *x)
+{
+--*x;
+}
+
+void
+move_right(double *x)
+{
+++*x;
+}
+
+
+
+typedef struct
+{
+void (*move)(double *a);
+} movement;
+
+void
+handle_destroy(Display *display, GC *gc)
+{
+XFreeGC(display, *gc);
+XCloseDisplay(display);
 }
 
 typedef struct
 {
-  void (*move)(double *a);
-} movement;
+i32 x;
+i32 y;
+
+} display_pos;
+
+typedef struct
+{
+i32 x;
+i32 y;
+i32 z;
+
+} pos;
+
 
 int
 main()
 {
-  Display *MainDisplay = XOpenDisplay(NIL);
+Display *MainDisplay = XOpenDisplay(0);
+mem_arena *arena = arena_create(MiB(8));
 
-  Window root = XDefaultRootWindow(MainDisplay);
-  int screen = DefaultScreen(MainDisplay);
+Window root = XDefaultRootWindow(MainDisplay);
+int screen = DefaultScreen(MainDisplay);
 
-  Visual *v = DefaultVisual(MainDisplay, screen);
+Visual *v = DefaultVisual(MainDisplay, screen);
 
-  XSetWindowAttributes wa = {
-    .background_pixmap = None,
-    .background_pixel = BlackPixel(MainDisplay, DefaultScreen(MainDisplay)),
-    .border_pixmap = CopyFromParent,
-    .border_pixel = 0,
-    .bit_gravity = ForgetGravity,
-    .win_gravity = NorthWestGravity,
-    .backing_store = NotUseful,
-    .backing_planes = 1,
-    .backing_pixel = 0,
-    .save_under = False,
-    .event_mask = {},
-    .do_not_propagate_mask = {},
-    .override_redirect = False,
-    .colormap = CopyFromParent,
-    .cursor = None
-  };
+XSetWindowAttributes wa = {
+.background_pixmap = None,
+.background_pixel = BlackPixel(MainDisplay, DefaultScreen(MainDisplay)),
+.border_pixmap = CopyFromParent,
+.border_pixel = 0,
+.bit_gravity = ForgetGravity,
+.win_gravity = NorthWestGravity,
+.backing_store = NotUseful,
+.backing_planes = 1,
+.backing_pixel = 0,
+.save_under = False,
+.event_mask = {},
+.do_not_propagate_mask = {},
+.override_redirect = False,
+.colormap = CopyFromParent,
+.cursor = None
+};
 
-  i32 dp_heigth = DisplayHeight(MainDisplay, screen);
-  i32 dp_width = DisplayWidth(MainDisplay, screen);
+i32 dp_heigth = DisplayHeight(MainDisplay, screen);
+i32 dp_width = DisplayWidth(MainDisplay, screen);
 
-  WindowProperties p = {
+WindowProperties p = {
 
-    .x = dp_width / 2,
-    .y = dp_heigth / 2,
-    .width = (u32)400,
-    .height = (u32)400,
-    .border_width = 0,
-    .window_depth = CopyFromParent,
-    .window_class = CopyFromParent,
-    .value_mask = CWBackPixel,
+.x = dp_width / 2,
+.y = dp_heigth / 2,
+.height = (u32)800,
+.width = (u32)1200,
+.border_width = 0,
+.window_depth = CopyFromParent,
+.window_class = CopyFromParent,
+.value_mask = CWBackPixel,
 
-  };
+};
 
-  Window window =
-    XCreateWindow(
-      MainDisplay,
-      root,
-      p.x,
-      p.y,
-      p.width,
-      p.height,
-      p.border_width,
-      p.window_depth,
-      p.window_class,
-      v,
-      p.value_mask,
-      &wa);
 
-  XSetWindowBorder(MainDisplay, window, 60);
-  XSelectInput(MainDisplay, window, ExposureMask | StructureNotifyMask);
-  XMapWindow(MainDisplay, window);
+Window window =
+XCreateWindow(
+MainDisplay,
+root,
+p.x,
+p.y,
+p.width,
+p.height,
+p.border_width,
+p.window_depth,
+p.window_class,
+v,
+p.value_mask,
+&wa);
 
-  double x = p.width / 2;
-  double y = p.height / 2;
-  u32 rect_width = 50;
-  u32 rect_height = 50;
+Pixmap pixmap = XCreatePixmap(MainDisplay, window, dp_width, dp_heigth, 1);
 
-  b16 running = 1;
+XSetWindowBorder(MainDisplay, window, 60);
+XSelectInput(MainDisplay, window, ExposureMask | StructureNotifyMask);
+XMapWindow(MainDisplay, window);
 
-  u64 color = 0x0000ff00;
 
-  GC gc = XCreateGC(MainDisplay, window, 0, NIL);
-  GC textGc = XCreateGC(MainDisplay, window, 0, NIL);
-  XSetForeground(MainDisplay, gc, color);
+double x = p.width / 2;
+double y = p.height / 2;
 
-  double *pX = &x;
-  double *pY = &y;
+u32 rect_width = 50;
+u32 rect_height = 50;
 
-  movement m = {
-    .move = move_down
-  };
+u64 color = 0x0000ff00;
 
-  while (running)
-  {
-    if (*pY + rect_height >= p.height)
-    {
-      m.move = move_up;
-    }
-    else if (*pY <= 0)
-    {
-      m.move = move_down;
-    }
+GC gc = XCreateGC(MainDisplay, window, 0, NIL);
+XSetForeground(MainDisplay, gc, color);
 
-    char words[] = "working";
 
-    XTextItem ti = {
-      .chars = words,
-      .nchars = (int)strlen(words),
-      .delta = 0,
-      .font = None
-    };
+double *pX = &x;
+double *pY = &y;
 
-    XClearWindow(MainDisplay, window);
+movement m = {
+.move = move_down
+};
 
-    XDrawText(
-      MainDisplay,
-      window,
-      textGc,
-      50,
-      50,
-      &ti,
-      1);
+XEvent event;
+XNextEvent(MainDisplay, &event);
 
-    XFillRectangle(
-      MainDisplay,
-      window,
-      gc,
-      (i32)*pX,
-      (i32)*pY,
-      rect_height,
-      rect_width);
+for (;;)
+{
+switch (event.type)
+case KeyPress:
+case KeyRelease:
+{
 
-    XFillRectangle(
-      MainDisplay,
-      window,
-      gc,
-      (i32)*pX + 100,
-      (i32)*pY,
-      rect_height,
-      rect_width);
 
-    XFillRectangle(
-      MainDisplay,
-      window,
-      gc,
-      (i32)*pX - 100,
-      (i32)*pY,
-      rect_height,
-      rect_width);
+}
+default:
+{
+if (*pX + rect_width >= p.width)
+{
+m.move = move_left;
+}
+else if (*pX <= 0)
+{
+m.move = move_right;
+}
 
-    m.move(pY);
+char words[] = "working";
 
-    sleep_ms(10);
+XTextItem ti = {
+.chars = words,
+.nchars = (int)strlen(words),
+.delta = 0,
+.font = None
+};
 
-    XFlush(MainDisplay);
-  }
+XClearWindow(MainDisplay, window);
 
-  XFreeGC(MainDisplay, gc);
-  XFreeGC(MainDisplay, textGc);
-  XCloseDisplay(MainDisplay);
+pos *p = arena_push(arena, sizeof(*p),  0);
 
-  return 0;
+p->z = 10;
+p->x = ((i32)*pX * 10) / p->z;
+p->y = ((i32)*pY * 10) / p->z;
+
+XFillRectangle(
+MainDisplay,
+window,
+gc,
+(i32)p->x,
+(i32)p->y,
+rect_height,
+rect_width);
+
+m.move(&x);
+
+sleep_ms(1);
+
+XFlush(MainDisplay);
+}
+
+case DestroyNotify:
+{
+// handle_destroy(MainDisplay, &gc);
+}
+}
+
+arena_clear(arena);
+return 0;
 }
