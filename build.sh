@@ -1,31 +1,29 @@
 #!/bin/sh
 set -eu
 
-# Toolchain
-CC=clang
+script_dir="$(dirname "$(readlink -f "$0")")"
+cd "$script_dir"
 
-# Files
-SRC=main.c
-OUT=main
+build_dir="build"
+mkdir -p "$build_dir"
 
-# Include paths
-INCLUDES="-I."
+compile()
+{
+ source="$1"
+ out="$2"
+ flags="${3:-}"
 
-# Compiler flags
-CFLAGS="
--g
--O0
-"
+ common_flags="-I. -Wall -Wextra -Wno-unused-function -Wno-unused-variable"
+ linker_flags="-lX11 -lm"
 
-# Linker flags
-LDFLAGS="
--lX11
--I.
--lm
-"
+ flags="$common_flags $flags $linker_flags"
 
-echo "==> Building $OUT"
-$CC $CFLAGS $INCLUDES "$SRC" -o "$OUT" $LDFLAGS
+ gcc $flags "$(readlink -f "$source")" -o "$build_dir"/"$out"
+}
 
-echo "==> Running $OUT"
-./"$OUT"
+# Build core shared lib
+compile "source/core/core.h" "libcore.so" "-fPIC -shared -DCORE_UNITY"
+
+# Build app
+compile "source/core/core.c" "app" "-L$build_dir -lcore"
+
