@@ -64,63 +64,61 @@ int main()
                       p.value_mask,
                       &wa);
 
-    Pixmap pixmap = XCreatePixmap(MainDisplay, window, dp_width, dp_heigth, 1);
-
     XSetWindowBorder(MainDisplay, window, 60);
-
-	// NOTE(nasr): type of input we want to handle
-    XSelectInput(MainDisplay, window, ExposureMask | StructureNotifyMask | KeyReleaseMask);
-
+    XSelectInput(MainDisplay, window, ExposureMask | StructureNotifyMask | KeyReleaseMask | KeyPressMask);
     XMapWindow(MainDisplay, window);
-
-    double x = p.width / 2;
-    double y = p.height / 2;
+    XEvent event;
 
     u32 rect_width = 50;
     u32 rect_height = 50;
+    i32 rect_x_position = p.width / 2;
+    i32 rect_y_position = p.height / 2;
 
     u64 color = 0x0000ff00;
 
     GC gc = XCreateGC(MainDisplay, window, 0, NIL);
     XSetForeground(MainDisplay, gc, color);
 
-    double *pX = &x;
-    double *pY = &y;
-
-    XEvent event;
-    XNextEvent(MainDisplay, &event);
-
     for (;running;)
     {
-        KeySym keysym = XLookupKeysym(event, 0);
+        XNextEvent(MainDisplay, &event);
+        KeySym keysym = XLookupKeysym(&event.xkey, 0);
 
         switch (event.type)
 		{
             case (KeyPress):
-		        {
-                    if (keysym == XK_p || keysym == XK_P) 
+		    {
+                    if(keysym == XK_h) rect_x_position -= 20;
+                    else if(keysym == XK_l) rect_x_position += 20;
+                    else if(keysym == XK_k)
                     {
-                        XDrawRectangle(MainDisplay, screen, gc, 50, 50, 50, 50);
+                        rect_y_position -= 20;
                     }
+                    else if(keysym == XK_j)
+                    {
+                        rect_y_position += 20;
+                    }
+                    else if(keysym == XK_s)
+                    {
+
+                    }
+                    else if(keysym == XK_Escape || keysym == XK_q) goto exit;
+
+                    XClearWindow(MainDisplay, window);
+                    XDrawRectangle(MainDisplay, window, gc, rect_x_position, rect_y_position, 50, 50);
+                    XFillRectangle(MainDisplay, window, gc, rect_x_position, rect_y_position, 50, 50);
 
 			        break;
-		        }
-            case (KeyRelease):
-		        {
-                    if (keysym == XK_p || keysym == XK_P) 
-                    {
-                        XDrawRectangle(MainDisplay, screen, gc, 50, 50, 50, 50);
-                    }
-
-			        break;
-		        }
+		    }
             default:
-                {
+			{
 
-                }
+
+			}
 
 		}
 	}
+exit:
     arena_clear(arena);
     return 0;
 }
