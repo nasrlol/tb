@@ -1,56 +1,116 @@
 #define BASE_IMPLEMENTATION
 #define BASE_RAND_IMPLEMENTATION
 #define BASE_MATH_IMPLEMENTATION
-#define BASE_PLATFORM
-#define BASE_PLATFORM_IMPLEMENTATION
 #include "../base/base_include.h"
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 1200
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+
+#include "tb.h"
+
 
 internal void
-load_entities(Display *MainDisplay, Window *window, GC *gc, s32 entity_count)
+el_push(enemy_list *el, enemy *en)
 {
-    s32 x = (s32)generate_random_u64(RAND_CONSTANT);
-    s32 y = (s32)generate_random_u64(RAND_CONSTANT);
 
-    for (s32 index = 0; index < entity_count; ++index)
+    en->next = NULL;
+
+    if (el->first == NULL) {
+        el->first = en;
+        el->last = en;
+    } else {
+        el->last->next = en;
+        el->last = en;
+    }
+    el->count++;
+}
+
+
+internal void
+pop_enemies(enemy_list *el)
+{
+    unused(el);
+    //- TODO(nasr): implement a stack design
+}
+
+internal void
+load_enemies(Display *MainDisplay, Window *window, GC *gc, enemy_list *el)
+{
+    s32 x = (s32)generate_random_u64(RAND_CONSTANT) / ( 10 << 8 );
+    s32 y = (s32)generate_random_u64(RAND_CONSTANT) / ( 10 << 8 );
+
+    if(el->first == NULL)
     {
+        return;
+    }
+    enemy *current = el->first;
+
+    for (s32 index = 0; index < el->count; ++index)
+    {
+
         s32 delta = (s32)generate_random_u64(RAND_CONSTANT);
 
-        XDrawRectangle(MainDisplay,
-        *window,
-        *gc,
-        x * (1/delta),
-        y * (1/delta),
-        50,
-        50);
+        //- draw
+        {
+            XDrawRectangle(MainDisplay, *window, *gc, x * (1/delta), y * (1/delta), 50, 50);
+            XFillRectangle(MainDisplay, *window, *gc, x * (1/delta), y * (1/delta), 50, 50);
+        }
 
-        XFillRectangle(MainDisplay,
-        *window,
-        *gc,
-        x * (1/delta),
-        y * (1/delta),
-        50,
-        50);
+
+
+        {
+            s32 dx, dy;
+
+            if(current->next)
+            {
+                 dx = current->x - current->next->x;
+                 dy = current->y - current->next->y;
+                 _log("shawakoemba");
+
+            } else
+            {
+                 dx = 50;
+                 dy = 50;
+            }
+
+            //- normalize the distance | why this is needed? no clue
+            f32 distance = sqrtf(dx*dx + dy*dy);
+
+            if(distance > 1.0f) {
+
+                f32 speed = delta * 0.5f;
+
+                current->x += (s32)((dx / distance) * speed);
+                current->y += (s32)((dy / distance) * speed);
+            }
+
+            for (s32 index = 0; index < el->count; ++index) {
+                if(current->x >= 500)   delta = -delta;
+                if(current->y >= 500)  delta = -delta;
+
+                if(current->x >= 500) delta = -delta;
+                if(current->x >=  500) delta = -delta;
+            }
+
+        }
+
+        if(current->next != NULL)
+        {
+            current = current->next;
+        }
     }
+
+    // handle enemys
 }
-
-
-internal void
-load_user(Display *MainDisplay, Window *window, GC *gc, s32 x, s32 y, u32 width, u32 height)
-{
-        XDrawRectangle(MainDisplay, *window, *gc, x, y, width, height);
-        XFillRectangle(MainDisplay, *window, *gc, x, y, width, height);
-}
-
 
 int main()
 {
     b32 running = 1;
 
     Display *MainDisplay = XOpenDisplay(0);
-    mem_arena *arena = arena_create(MiB(8));
+    mem_arena *global_arena = arena_create(MiB(8));
+    mem_arena *enemy_arena  = arena_create(MiB(100));
 
     Window root = XDefaultRootWindow(MainDisplay);
     int screen = DefaultScreen(MainDisplay);
@@ -62,7 +122,7 @@ int main()
         .background_pixmap = None,
         .background_pixel = BlackPixel(MainDisplay, DefaultScreen(MainDisplay)),
         .border_pixmap = CopyFromParent,
-        .border_pixel = 0,
+        .border_pixel= 0,
         .bit_gravity = ForgetGravity,
         .win_gravity = NorthWestGravity,
         .backing_store = NotUseful,
@@ -79,69 +139,58 @@ int main()
     s32 dp_heigth = DisplayHeight(MainDisplay, screen);
     s32 dp_width = DisplayWidth(MainDisplay, screen);
 
+    s32 WINDOW_WIDTH = 1600;
+    s32 WINDOW_HEIGHT = 800;
 
-    WindowProperties p = {
-
-        .x =
-        .y =
-        .height =
-        .width =
-        .border_width = 0,
-        .window_depth = CopyFromParent,
-        .window_class =
-        .value_mask   =
-
-    };
-
-    Window window = XCreateWindow( MainDisplay, root, dp_width / 2, dp_heigth / 2,
-                (u32)WINDOW_WIDTH, (u32)WINDOW_HEIGHT, 0, CopyFromParent, v, CWBackPixel, &wa);
+    Window window = XCreateWindow(
+            MainDisplay,            // display
+            root,                   // parent
+            (dp_width / 2),         // x
+            (dp_heigth / 2),        // y
+            (u32)WINDOW_WIDTH,      // width
+            (u32)WINDOW_HEIGHT,     // height
+            0,                      // border_width
+            CopyFromParent,         // depth
+            CopyFromParent,         // class
+            v,                      // depth
+            CWBackPixel,            // visual
+            &wa);
 
     XSetWindowBorder(MainDisplay, window, 60);
     XSelectInput(MainDisplay, window, ExposureMask | StructureNotifyMask | KeyReleaseMask | KeyPressMask);
     XMapWindow(MainDisplay, window);
     XEvent event;
 
-    f32 DELTA = 2.5;
-
-    u32 rect_width = 50;
-    u32 rect_height = 50;
-
-    s32 rect_x_position = p.width / 2;
-    s32 rect_y_position = p.height / 2;
-
-    s32 rect_enemy_x_position = (p.width / 2)  + 300;
-    s32 rect_enemy_y_position = (p.height / 2) + 300;
-
-    u64 color = 0x0FF0FF00;
 
     GC gc = XCreateGC(MainDisplay, window, 0, NIL);
-    XSetForeground(MainDisplay, gc, color);
+    XSetForeground(MainDisplay, gc, 0x53f830a2);
+
+    s32 delta = 20;
+
+    enemy_list *el = PushStruct(enemy_arena, enemy_list);
+
+    el->first = NULL;
+    el->last  = NULL;
+    el->count = 0;
+
+    user user =
+    {
+
+        .color = 0x4af333f4ff,
+        .alive = False,
+        .x     = 400,
+        .y     = 400,
+        .width = 50,
+        .height = 50,
+
+    };
+
 
     for (;running;)
     {
         //- handle collision detection
-        {
-            if(rect_y_position >= WINDOW_HEIGHT)    DELTA = -DELTA;
-            if(rect_x_position >= WINDOW_WIDTH)     DELTA = -DELTA;
-
-            if(rect_enemy_y_position >= WINDOW_HEIGHT)    DELTA = -DELTA;
-            if(rect_enemy_x_position >= WINDOW_WIDTH)     DELTA = -DELTA;
-        }
-
         //- handle enemy movement
-        {
-            s32 dy = rect_y_position - rect_enemy_y_position;
-            s32 dx = rect_x_position - rect_enemy_x_position;
 
-            //- normalize the distance | why this is needed? no clue
-            f32 distance = sqrtf(dx*dx + dy*dy);
-
-            if(distance > 1.0f) {
-                f32 speed = DELTA * 0.5f;
-                rect_enemy_x_position += (s32)((dx / distance) * speed);
-                rect_enemy_y_position += (s32)((dy / distance) * speed);
-            }
-        }
 
         XNextEvent(MainDisplay, &event);
 
@@ -149,35 +198,45 @@ int main()
         {
             case(KeyPress):
                 {
-                    KeySym keysym = XLookupKeysym(&event.xkey, 0);
-                    //- handle user movement
+                    KeySym keysym = XLookupKeysym(&event.xkey, 0); //- handle user movement
                     {
-                        if(keysym == XK_h)      rect_x_position -= DELTA*1.5;
-                        else if(keysym == XK_l) rect_x_position += DELTA*1.5;
-                        else if(keysym == XK_k) rect_y_position -= DELTA*1.5;
-                        else if(keysym == XK_j) rect_y_position += DELTA*1.5;
+
+                        if(keysym == XK_h)      user.x -= (delta*1.5);
+                        else if(keysym == XK_l) user.x += (delta*1.5);
+                        else if(keysym == XK_k) user.y -= (delta*1.5);
+                        else if(keysym == XK_j) user.y += (delta*1.5);
                         else if(keysym == XK_s);
                         else if(keysym == XK_Escape || keysym == XK_q) goto exit;
+                        else if(keysym == XK_p) {
+
+                            enemy *en = PushStruct(enemy_arena, enemy);
+                            el_push(el, en);
+
+                        }
                     }
 
 
-                    // clear screen before drawing entities
-
-                    XClearWindow(MainDisplay, window);
-
                     //- draw entities
-                    {
-                    } break;
-                }
-            default:
-                {
+                } break;
+            default: {
+                         _log("exited");
 
-                }
+                     }
         }
+
+        // clear screen before drawing entities
+        XClearWindow(MainDisplay, window);
+
+        load_enemies(MainDisplay, &window, &gc, el);
+
+        XDrawRectangle(MainDisplay, window, gc, user.x, user.y, user.width, user.height);
+        XFillRectangle(MainDisplay, window, gc, user.x, user.y, user.width, user.height);
+
+        user.color = user.color << 8;
+
     }
 
-
 exit:
-    arena_destroy(arena);
+    arena_destroy(global_arena);
     return 0;
 }
