@@ -1,73 +1,30 @@
-internal umm
-skip_whitespaces(string *buffer)
+internal b32
+is_alpha(u8 point)
 {
-    s32 index = 0;
-    while (buffer->size > index)
-    {
-        ++index;
-    }
+    return ((point >= 'a' && point <= 'z') || (point >= 'A' && point <= 'Z') || (point == '_'));
 }
 
-internal b8
-compare_string_struct(string c1, string c2)
+internal b32
+is_digit(u8 point)
 {
-    if (c1.size != c2.size)
-    {
-        return -1;
-    }
-
-    for (s32 index = 0;
-    index < c1.size;
-    ++index)
-    {
-        if (c1.Data[index] != c2.Data[index])
-        {
-            return -1;
-        }
-    }
-
-    return 0;
+    return (point >= '0' && point <= '9');
 }
 
-internal b8
-compare_string(char *c1, char *c2)
+internal b32
+is_alpha_num(u8 point)
 {
-    if (sizeof(*c1) != sizeof(*c2))
-    {
-        return -1;
-    }
-
-    for (
-    u64 word_idx = 0;
-    word_idx <= sizeof(*c1);
-    ++word_idx)
-    {
-        if (*c1 != *c2)
-        {
-            return -1;
-        }
-        ++c1;
-        ++c2;
-    }
-
-    return 0;
+    return (is_alpha(point) || is_digit(point));
 }
 
-/** NOTE(nasr): Helper function to parse strings to int using ascii codes **/
-internal u64
-parse_u64(char *buf, umm len)
+internal b32 is_whitespace(u8 point)
 {
-    u64 value = 0;
-
-    for (umm buffer_idx = 0; buffer_idx < len; ++buffer_idx)
-    {
-        char c = buf[buffer_idx];
-        if (c < '0' || c > '9')
-        {
-            break;
-        }
-        value = value * 10 + (c - '0');
-    }
-
-    return value;
+    return (point == '\n' || point == '\r' || point == ' ' || point == '\t');
 }
+
+internal b32
+is_slash(u8 point)
+{
+  return (point == '/' || point == '\\');
+}
+
+

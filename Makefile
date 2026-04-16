@@ -1,12 +1,12 @@
 .PHONY: all clean
 
 CC := gcc
-CFLAGS := -I. -Wall -Wextra -Wno-unused-function -Wno-unused-variable -DCORE_UNITY
+CFLAGS := -I. -Wall -Wextra -Wno-unused-function -Wno-unused-variable -Dtb_UNITY
 LDLIBS := -lX11 -lm
 
 BUILD_DIR := build
 TARGET := $(BUILD_DIR)/app
-SOURCE := source/core/core.c
+SOURCE := source/tb/tb.c
 
 all: $(TARGET)
 

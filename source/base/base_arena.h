@@ -1,14 +1,18 @@
-#ifndef ARENA_H
-#define ARENA_H
+#ifndef BASE_ARENA_H
+#define BASE_ARENA_H
 
 #define Align(pointer, alignment) align((u64)(pointer), (umm)(alignment))
-#define PushStruct(arena, type) (type *)arena_alloc((arena), sizeof(type))
-#define PushArray(arena, type, len) (type *)arena_alloc((arena), sizeof(type) * (len))
-#define PushString(arena, len) (s8 *)arena_alloc((arena), sizeof(s8)*len))
+#define PushStruct(arena, type) (type *)arena_alloc((arena), sizeof(type), 0)
+#define PushStructZero(arena, type) (type *)arena_alloc((arena), sizeof(type), 1)
+#define PushArray(arena, type, len) (type *)arena_alloc((arena), sizeof(type) * (len), 0)
+#define PushArrayZero(arena, type, len) (type *)arena_alloc((arena), sizeof(type) * (len), 1)
+
+#define KiB(n) (((u64)(n)) << 10)
+#define MiB(n) (((u64)(n)) << 20)
+#define GiB(n) (((u64)(n)) << 30)
+
 
 typedef struct mem_arena  mem_arena;
-typedef struct temp_arena temp_arena;
-
 struct mem_arena
 {
     u64 current_position;
@@ -17,25 +21,11 @@ struct mem_arena
     u8 *base_position;
 };
 
+typedef struct temp_arena temp_arena;
 struct temp_arena
 {
     mem_arena *arena;
     u64        start_position;
 };
 
-internal mem_arena *
-arena_resize_align(
-                   mem_arena *arena,
-                   void      *old_memory,
-                   u64        new_size,
-                   u64        old_size,
-                   umm        alignment);
-
-internal mem_arena *
-arena_resize(
-             mem_arena *arena,
-             void      *old_memory,
-             u64        new_size,
-             u64        old_size);
-
-#endif
+#endif /* BASE_ARENA_H */

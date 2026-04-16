@@ -1,34 +1,12 @@
 #ifndef BASE_H
 #define BASE_H
 
-#include <stdint.h>
-#include <unistd.h>
-#include <stddef.h>
-#include <string.h>
-
 /* assert an expression and output the file and the line */
-
-#define internal static
+#define internal        static
 #define global_variable static
-#define local_persist static
-
-#define ERR_OK 0
-#define ERR_IO 1
-#define ERR_PARSE 2
-#define ERR_PERM 3
-#define ERR_INVALID 4
-
-#define KiB(n) (((u64)(n)) << 10)
-#define MiB(n) (((u64)(n)) << 20)
-#define GiB(n) (((u64)(n)) << 30)
+#define local_persist   static
 
 #define unused(x) (void)(x)
-
-#define PATH_MAX_LEN 128
-#define BUFF_SMALL 128
-#define BUFF_DEFAULT 256
-#define BUFF_LARGE 512
-
 #define NIL 0
 
 #define DEPRECATED __attribute__((__deprecated__))
@@ -43,35 +21,44 @@
 #define MemCpy(dest, src, len) memcpy((dest), (src), (len))
 #define MemSet(dest, len) memset((dest), (0), (len))
 
+#if COMPILER_MSVC || (COMPILER_CLANG && OS_WINDOWS)
+#pragma section(".rdata$", read)
+#define read_only __declspec(allocate(".rdata$"))
+#elif (COMPILER_CLANG && OS_LINUX)
+#define read_only __attribute__((section(".rodata")))
+#else
+#define read_only
+#endif
+
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  u8;
 
-typedef int8_t  i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
+typedef int8_t  s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 
 typedef float  f32;
 typedef double f64;
 
-typedef i32 b32;
-typedef i16 b16;
-typedef u8  b8;
+typedef s32 b32;
+typedef s16 b16;
+typedef s8  b8;
 
 typedef uintptr_t umm;
 typedef intptr_t  smm;
 
-#define TRUE (0 == 0)
-#define FALSE (0 != 0)
+#define True    (1 == 1)
+#define False   (1 != 1)
 
-typedef struct s8 s8;
+#define Red         "\x1b[31m"
+#define Green       "\x1b[32m"
+#define Reset       "\x1b[0m"
+#define Blue        "\x1b[34m"
+#define Yellow      "\x1b[33m"
 
-struct s8
-{
-    char *data;
-    umm   size;
-};
+#define Len(s) (sizeof(s) - 1)
 
 #endif

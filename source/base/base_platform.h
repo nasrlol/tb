@@ -1,3 +1,7 @@
+#ifndef BASE_PLATFORM_H
+#define BASE_PLATFORM_H
+
+#ifdef BASE_PLATFORM_IMPLEMENTATION
 internal inline void
 sleep_ms(long ms)
 {
@@ -10,3 +14,5 @@ sleep_ms(long ms)
     NULL;
   }
 }
+#endif /* BASE_PLATFORM_IMPLEMENTATION */
+#endif /* BASE_PLATFORM_H */

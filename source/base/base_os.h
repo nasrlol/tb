@@ -1,0 +1,132 @@
+#ifndef BASE_OS_H
+#define BASE_OS_H
+
+#ifdef OS_LINUX
+
+
+#define STDIN_FD  0
+#define STDOUT_FD 1
+#define STDERR_FD 2
+
+#endif /* BASE_OS_H */
+
+#ifdef BASE_IMPLEMENTATION
+
+internal string8
+load_file(mem_arena *arena, const char *path)
+{
+    string8 result = {0};
+    struct stat sbuf = {0};
+
+    // TODO(nasr): abstract this to a platform layer
+    s32 file = open(path, O_RDONLY);
+    if(file == -1)
+    {
+        warn("fialed to open file. path could be invalid"); return (string8){0};
+    }
+
+    if(fstat(file, &sbuf) == -1)
+    {
+        warn("error: fstat failed");
+        close(file);
+        return (string8){0};
+    }
+
+
+    result = PushString8(arena, sbuf.st_size);
+
+    result.size = (u64)sbuf.st_size;
+    if(result.size != 0)
+    {
+        result.data = (u8 *)mmap(0, result.size, PROT_READ, MAP_PRIVATE, file, 0);
+    }
+
+    close(file);
+    return result;
+}
+
+internal string8
+write_file(const char *path, string8 data)
+{
+    string8 result = {0};
+    s32 file = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if(file == -1)
+    {
+        warn("failed to open file for writing. path could be invalid");
+        return (string8){0};
+    }
+
+    u64 written = 0;
+    while(written < data.size)
+    {
+        s64 err = write(file, data.data + written, data.size - written);
+        if(err == -1)
+        {
+            warn("write syscall failed");
+            close(file);
+            return (string8){0};
+        }
+        written += err;
+    }
+
+    close(file);
+    result = data;
+    return result;
+}
+
+#define os_write(void const *buf, u64 count) _os_write(STDIN, buf, count)
+#define os_read(void const *buf, u64 count)  _os_read(STDIN, buf, count)
+
+internal s64
+_os_write(s32 fd, void const *buf, u64 count)
+{
+    return syscall(SYS_write, fd, buf, count);
+}
+
+internal s64
+_os_read(s32 fd, void *buf, u64 count)
+{
+    return syscall(SYS_read, fd, buf, count);
+}
+
+internal void
+print_s8(string8 s)
+{
+    os_write(s.data, s.size);
+}
+
+internal void
+print(const char *str)
+{
+    s32 len = 0;
+    while (str[len]) len++;
+    os_write(STDOUT_FILENO, str, len);
+
+}
+
+internal void
+write_string(s32 fd, const char *str)
+{
+    s32 len = 0;
+    while (str[len]) len++;
+    os_write(fd, str, len);
+}
+
+internal void
+write_int(s32 num)
+{
+
+    if (num < 0)
+    {
+        write(STDERR_FILENO, "-", 1);
+        num = -num;
+    }
+    if (num >= 10) write_int(num / 10);
+
+    char digit = '0' + (num % 10);
+
+    write(STDERR_FILENO, &digit, 1);
+}
+
+#endif
+#endif
