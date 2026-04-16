@@ -1,9 +1,6 @@
 #ifndef BASE_OS_H
 #define BASE_OS_H
 
-#ifdef OS_LINUX
-
-
 #define STDIN_FD  0
 #define STDOUT_FD 1
 #define STDERR_FD 2
@@ -22,12 +19,11 @@ load_file(mem_arena *arena, const char *path)
     s32 file = open(path, O_RDONLY);
     if(file == -1)
     {
-        warn("fialed to open file. path could be invalid"); return (string8){0};
+        return (string8){0};
     }
 
     if(fstat(file, &sbuf) == -1)
     {
-        warn("error: fstat failed");
         close(file);
         return (string8){0};
     }
@@ -52,7 +48,6 @@ write_file(const char *path, string8 data)
     s32 file = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if(file == -1)
     {
-        warn("failed to open file for writing. path could be invalid");
         return (string8){0};
     }
 
@@ -62,7 +57,6 @@ write_file(const char *path, string8 data)
         s64 err = write(file, data.data + written, data.size - written);
         if(err == -1)
         {
-            warn("write syscall failed");
             close(file);
             return (string8){0};
         }
@@ -74,8 +68,8 @@ write_file(const char *path, string8 data)
     return result;
 }
 
-#define os_write(void const *buf, u64 count) _os_write(STDIN, buf, count)
-#define os_read(void const *buf, u64 count)  _os_read(STDIN, buf, count)
+#define os_write(buf, count) _os_write(STDIN_FD, buf, count)
+#define os_read(buf,  count)  _os_read(STDIN_FD, buf, count)
 
 internal s64
 _os_write(s32 fd, void const *buf, u64 count)
@@ -90,26 +84,26 @@ _os_read(s32 fd, void *buf, u64 count)
 }
 
 internal void
-print_s8(string8 s)
+log_s8(string8 s)
 {
     os_write(s.data, s.size);
 }
 
 internal void
-print(const char *str)
+_log(const char *str)
 {
     s32 len = 0;
     while (str[len]) len++;
-    os_write(STDOUT_FILENO, str, len);
+    os_write(str, len);
 
 }
 
 internal void
-write_string(s32 fd, const char *str)
+write_string(const char *str)
 {
     s32 len = 0;
     while (str[len]) len++;
-    os_write(fd, str, len);
+    os_write(str, len);
 }
 
 internal void
@@ -128,5 +122,18 @@ write_int(s32 num)
     write(STDERR_FILENO, &digit, 1);
 }
 
-#endif
+internal inline void
+sleep_ms(long ms)
+{
+  struct timespec ts;
+  ts.tv_sec = ms / 1000;
+  ts.tv_nsec = (ms % 1000) * 1000000L;
+
+  while (nanosleep(&ts, &ts))
+  {
+    NULL;
+  }
+}
+
+
 #endif

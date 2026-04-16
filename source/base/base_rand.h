@@ -12,9 +12,8 @@
 internal u64
 generate_random_u64(u64 constant)
 {
-
-    time_t current_time = time(NULL);
-    return current_time ^ constant;
+    time_t current_time = time(0);
+    constant = current_time ^ constant;
 
     constant += 0x9e3779b97f4a7c15;
 
