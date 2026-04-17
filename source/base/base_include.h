@@ -12,6 +12,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdarg.h>
 
 #include "base.h"
 #include "base_mem.h"

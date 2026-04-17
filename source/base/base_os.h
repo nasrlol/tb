@@ -89,14 +89,20 @@ log_s8(string8 s)
     os_write(s.data, s.size);
 }
 
+#if 1
 internal void
 _log(const char *str)
 {
+#ifdef BASE_LOGGING
     s32 len = 0;
     while (str[len]) len++;
     os_write(str, len);
+#else
+    unused(str);
+#endif
 
 }
+#endif
 
 internal void
 write_string(const char *str)

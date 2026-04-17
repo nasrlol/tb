@@ -1,6 +1,7 @@
 #define BASE_IMPLEMENTATION
 #define BASE_RAND_IMPLEMENTATION
 #define BASE_MATH_IMPLEMENTATION
+#define BASE_LOGGING
 #include "../base/base_include.h"
 
 #include <X11/X.h>
@@ -10,7 +11,7 @@
 #include "tb.h"
 
 
-internal void
+    internal void
 el_push(enemy_list *el, enemy *en)
 {
 
@@ -27,90 +28,13 @@ el_push(enemy_list *el, enemy *en)
 }
 
 
-internal void
-pop_enemies(enemy_list *el)
-{
-    unused(el);
-    //- TODO(nasr): implement a stack design
-}
-
-internal void
-load_enemies(Display *MainDisplay, Window *window, GC *gc, enemy_list *el)
-{
-    s32 x = (s32)generate_random_u64(RAND_CONSTANT) / ( 10 << 8 );
-    s32 y = (s32)generate_random_u64(RAND_CONSTANT) / ( 10 << 8 );
-
-    if(el->first == NULL)
-    {
-        return;
-    }
-    enemy *current = el->first;
-
-    for (s32 index = 0; index < el->count; ++index)
-    {
-
-        s32 delta = (s32)generate_random_u64(RAND_CONSTANT);
-
-        //- draw
-        {
-            XDrawRectangle(MainDisplay, *window, *gc, x * (1/delta), y * (1/delta), 50, 50);
-            XFillRectangle(MainDisplay, *window, *gc, x * (1/delta), y * (1/delta), 50, 50);
-        }
-
-
-
-        {
-            s32 dx, dy;
-
-            if(current->next)
-            {
-                 dx = current->x - current->next->x;
-                 dy = current->y - current->next->y;
-                 _log("shawakoemba");
-
-            } else
-            {
-                 dx = 50;
-                 dy = 50;
-            }
-
-            //- normalize the distance | why this is needed? no clue
-            f32 distance = sqrtf(dx*dx + dy*dy);
-
-            if(distance > 1.0f) {
-
-                f32 speed = delta * 0.5f;
-
-                current->x += (s32)((dx / distance) * speed);
-                current->y += (s32)((dy / distance) * speed);
-            }
-
-            for (s32 index = 0; index < el->count; ++index) {
-                if(current->x >= 500)   delta = -delta;
-                if(current->y >= 500)  delta = -delta;
-
-                if(current->x >= 500) delta = -delta;
-                if(current->x >=  500) delta = -delta;
-            }
-
-        }
-
-        if(current->next != NULL)
-        {
-            current = current->next;
-        }
-    }
-
-    // handle enemys
-}
-
 int main()
 {
     b32 running = 1;
 
     Display *MainDisplay = XOpenDisplay(0);
     mem_arena *global_arena = arena_create(MiB(8));
-    mem_arena *enemy_arena  = arena_create(MiB(100));
+    mem_arena *enemy_arena  = arena_create(MiB(8));
 
     Window root = XDefaultRootWindow(MainDisplay);
     int screen = DefaultScreen(MainDisplay);
@@ -163,7 +87,7 @@ int main()
 
 
     GC gc = XCreateGC(MainDisplay, window, 0, NIL);
-    XSetForeground(MainDisplay, gc, 0x53f830a2);
+    XSetForeground(MainDisplay, gc, 0x55ffaaff);
 
     s32 delta = 20;
 
@@ -176,11 +100,11 @@ int main()
     user user =
     {
 
-        .color = 0x4af333f4ff,
-        .alive = False,
-        .x     = 400,
-        .y     = 400,
-        .width = 50,
+        .color  = 0x4af333f4ff,
+        .alive  = False,
+        .x      = 400,
+        .y      = 400,
+        .width  = 50,
         .height = 50,
 
     };
@@ -191,8 +115,8 @@ int main()
         //- handle collision detection
         //- handle enemy movement
 
-
         XNextEvent(MainDisplay, &event);
+
 
         switch (event.type)
         {
@@ -201,42 +125,120 @@ int main()
                     KeySym keysym = XLookupKeysym(&event.xkey, 0); //- handle user movement
                     {
 
-                        if(keysym == XK_h)      user.x -= (delta*1.5);
-                        else if(keysym == XK_l) user.x += (delta*1.5);
-                        else if(keysym == XK_k) user.y -= (delta*1.5);
-                        else if(keysym == XK_j) user.y += (delta*1.5);
-                        else if(keysym == XK_s);
+                        switch(keysym )
+                        {
+                            case XK_h: user.x -= (delta*1.1);
+                            case XK_l: user.x += (delta*1.1);
+                            case XK_k: user.y -= (delta*1.1);
+                            case XK_j: user.y += (delta*1.1);
+                            default: {
+                                         XClearArea(MainDisplay, window, user.x, user.y, 50, 50, True);
+                                         XDrawRectangle(MainDisplay, window, gc, user.x, user.y, user.width, user.height);
+                                         XFillRectangle(MainDisplay, window, gc, user.x, user.y, user.width, user.height);
+                                     }
+                        }
+
+
+                        if(keysym == XK_s) {
+
+
+
+                        }
                         else if(keysym == XK_Escape || keysym == XK_q) goto exit;
                         else if(keysym == XK_p) {
 
                             enemy *en = PushStruct(enemy_arena, enemy);
+                            en->x = (u32)generate_random_u64(RAND_CONSTANT) / ( 10 << 20 );
+                            en->y = (u32)generate_random_u64(RAND_CONSTANT) / ( 10 << 20 );
                             el_push(el, en);
 
+
+                            if(el->first == NULL)
+                            {
+                                _log("first is NULL\n");
+                            }
+
+                            enemy *current = el->first;
+
+                            for (s32 index = 0; index < el->count; ++index)
+                            {
+
+
+                                s32 delta = (s32)generate_random_u64(RAND_CONSTANT);
+
+                                //- draw
+                                {
+
+                                    XClearArea(MainDisplay, window, current->x, current->y, 50, 50, True);
+
+                                    XDrawRectangle(MainDisplay, window, gc, current->x , current->y, 50, 50);
+                                    XFillRectangle(MainDisplay, window, gc, current->x , current->y, 50, 50);
+                                }
+
+                                {
+                                    s32 dx, dy;
+
+                                    if(current->next != NULL)
+                                    {
+                                        dx = current->x - current->next->x;
+                                        dy = current->y - current->next->y;
+                                        _log("shawakoemba\n");
+
+                                    } else
+                                    {
+                                        dx = 50;
+                                        dy = 50;
+                                    }
+
+                                    //- normalize the distance | why this is needed? no clue
+                                    f32 distance = sqrtf(dx*dx + dy*dy);
+
+                                    if(distance > 1.0f) {
+
+                                        f32 speed = delta * 0.5f;
+
+                                        current->x += (s32)((dx / distance) * speed);
+                                        current->y += (s32)((dy / distance) * speed);
+                                    }
+
+                                    for (s32 index = 0; index < el->count; ++index) {
+                                        if(current->x >= 500)   delta = -delta;
+                                        if(current->y >= 500)  delta = -delta;
+
+                                        if(current->x >= 500) delta = -delta;
+                                        if(current->x >=  500) delta = -delta;
+                                    }
+
+                                }
+
+                                if(current->next != NULL)
+                                {
+                                    current = current->next;
+                                }
+                            }
                         }
+                        else if(keysym == XK_c) {
+
+                            XSetForeground(MainDisplay, gc, user.color);
+
+                            u64 x = user.color;
+                            user.color = (x << 1) | (x >> 63);
+                        }
+
+                        //- draw entities
+                    } break;
+                    default:
+                    {
+
                     }
+                    // TODO(nasr): what do to do on default?
 
-
-                    //- draw entities
-                } break;
-            default: {
-                         _log("exited");
-
-                     }
+                    //- draw user
+                }
         }
-
-        // clear screen before drawing entities
-        XClearWindow(MainDisplay, window);
-
-        load_enemies(MainDisplay, &window, &gc, el);
-
-        XDrawRectangle(MainDisplay, window, gc, user.x, user.y, user.width, user.height);
-        XFillRectangle(MainDisplay, window, gc, user.x, user.y, user.width, user.height);
-
-        user.color = user.color << 8;
-
     }
 
 exit:
-    arena_destroy(global_arena);
-    return 0;
+        arena_destroy(global_arena);
+        return 0;
 }

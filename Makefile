@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 CC := gcc
-CFLAGS := -I. -g -o0 -Wall -Wextra -Wno-unused-function -Wno-unused-variable -Dtb_UNITY
+CFLAGS := -I. -g -o0 -Wall -Wextra -Wno-unused-function -Wno-unused-variable -Wno-implicit-fallthrough
 LDLIBS := -lX11 -lm
 
 BUILD_DIR := build
