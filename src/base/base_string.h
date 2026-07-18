@@ -1,0 +1,127 @@
+#ifndef BASE_STRING_H
+#define BASE_STRING_H
+
+// - str8
+typedef struct String8  String8;
+typedef struct String16 String16;
+typedef struct String32 String32;
+
+typedef struct String8Node  String8Node;
+typedef struct String16Node String16Node;
+typedef struct String32Node String32Node;
+
+typedef struct String8List  String8List;
+typedef struct String16List String16List;
+typedef struct String32List String32List;
+
+//- strings
+
+struct String8
+{
+    u8 *data;
+    u64 size;
+};
+
+struct String16
+{
+    u16 *data;
+    u64  size;
+};
+
+struct String32
+{
+    u32 *data;
+    u64  size;
+};
+
+//- nodes
+struct String8Node
+{
+    String8Node *next;
+    String8      value;
+};
+
+struct String16Node
+{
+    String16Node *next;
+    String16      string;
+};
+
+struct String32Node
+{
+    String32Node *next;
+    String32      value;
+};
+
+//- lists
+struct String8List
+{
+    String8Node *first;
+    String8Node *last;
+    u64          count;
+};
+
+struct String16List
+{
+    String16Node *first;
+    String16Node *last;
+    u64           count;
+};
+
+struct String32List
+{
+    String32Node *first;
+    String32Node *last;
+    u64           count;
+};
+
+//- cstring 
+internal b32 cstring_is_alnum(u8 point);
+internal b32 cstring_is_nil(u8 point);
+internal b32 cstring_is_whitespace(u8 point);
+internal b32 cstring_is_slash(u8 point);
+internal b32 cstring_is_alpha(u8 point);
+internal b32 cstring_is_digit(u8 point);
+internal b32 cstring_is_newline(u8 point);
+internal b32 cstring_is_match(u8 *a, u8 *b);
+
+//- string8 
+internal u64     str8_skip_element(String8 *buffer, u64 start_pos, String8 *element);
+internal u64     str8_find_element(String8 *buffer, u64 start_pos, String8 *element);
+internal b32     str8_is_match(String8 *a, String8 *b);
+internal void    str8_append_u8_element(String8 *buf, u8 c);
+internal void    str8_append_str8_element(String8 *a, String8 *b);
+internal void    str8_trim_right();
+internal String8 str8_chop_left(String8 buffer, u64 count);
+internal String8 str8_chop_right(String8 buffer, u64 count);
+internal String8 str8_zero();
+
+//- macros
+#define PushString8(arena, count) String8 { (u8 *)(PushArrayZero(arena, u8, (count))), (u64)(count)}
+#define PushString16(arena, count) String16 { (u16 *)(PushArrayZero(arena, u16, (count))), (u64)(count)}
+#define PushString32(arena, count) String32 { (u32 *)(PushArrayZero(arena, u32, (count))), (u64)(count)}
+
+#define ToString8(data) String8 { (u8 *)(data), (u64)(cstring8_length(data))}
+#define ToString16(data) String16 { (u16 *)(data), (u64)(cstring16_length(data))}
+#define ToString32(data) String32 { (u32 *)(data), (u64)(cstring32_length(data))}
+
+#define str8(data) ToString8(data)
+
+#define StringFmt "%.*s"
+#define ULongFmt "%lu"
+#define ULLongFmt "%llu"
+
+internal u64 cstring8_length(u8 *c); 
+internal u64 cstring16_length(u16 *c); 
+internal u64 cstring32_length(u32 *c); 
+
+//-
+ReadOnly global_variable String8  nil_str8  = {NULL, 0};
+ReadOnly global_variable String16 nil_str16 = {NULL, 0};
+ReadOnly global_variable String32 nil_str32 = {NULL, 0};
+
+ReadOnly global_variable String8Node  nil_str8_node  = {NULL, NULL};
+ReadOnly global_variable String16Node nil_str16_node = {NULL, NULL};
+ReadOnly global_variable String32Node nil_str32_node = {NULL, NULL};
+
+#endif /* BASE_STRING_H */
