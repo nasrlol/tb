@@ -3,20 +3,23 @@
 
 #if PLATFORM_UNIX
 
-#define PlatformCreateWindow(arena, height, width, xpos, ypos)  linux_x11_create_window(arena, height, width, xpos, ypos)
+#define PlatformCreateWindow(arena, height, width, xpos, ypos)  
 							    
-#define PlatformDrawLine() ...
-#define PlatformDrawRect() ...
-
+#if 0 // TODO
+#define PlatformDrawLine() 
+#define PlatformDrawRect()
 #define PlatformLoadLibrary
+#endif
 
 #elif PLATFORM_WINDOWS
 
-#define PlatformCreateWindow() ...
-#define PlatformDrawLine() ...
-#define PlatformDrawRect() ...
 
+#if 0 // TODO
+#define PlatformCreateWindow() 
+#define PlatformDrawLine() 
+#define PlatformDrawRect() 
 #define PlatformLoadLibrary
+#endif
 
 #else
 #error unsupported platform

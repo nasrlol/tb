@@ -15,9 +15,9 @@
 //- architecture definitions
 
 #if defined(__arm__) || defined(__aarch64__)
-#define ARCH_ARM
+#define ARCH_ARM 1
 #elif defined(__i386__) || defined(__x86_64__)
-#define ARCH_x86_64
+#define ARCH_x86_64 1
 #endif
 
 //- compiler definitions
@@ -40,32 +40,27 @@
 #define Deprecated __attribute__((__deprecated__))
 
 //- breakpoints
-#if defined(ARCH_ARM)
+#if ARCH_ARM
 #define breakpoint() __asm__ volatile("brk #0");
 // #define temp_breakpoint() __asm__ volatile("udf #0"); // TODO: I don't remember what the issue with this was for
-#elif defined(ARCH_x86_64)
+#elif ARCH_x86_64
 
-#if defined(COMPILER_GCC)
+#if COMPILER_GCC
 #define breakpoint() __asm__ volatile("int3"); // TODO: put this in the architecture guard
 #endif
 #endif
 
-#if defined(COMPILER_MSVC)
+#if COMPILER_MSVC
 #include <intrin.h>
 #define breakpoint() __debugbreak()
 #endif
 
-
-
 //-
-
 #define MemCpy(dest, src, len) memcpy((dest), (src), (len))
 #define MemSet(dest, len) memset((dest), (1), (len))
 #define MemSetZero(dest, len) memset((dest), (0), (len))
 
-
 //-  
-
 #if COMPILER_MSVC 
 #pragma section("read_only", read) 
 #define ReadOnly __declspec(allocate("read_only"))

@@ -2,15 +2,25 @@ internal linux_x11_win
 linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u32 disp_x, u32 disp_y)
 {
 
-    Display *MainDisplay = XOpenDisplay(0);
-    Window root = XDefaultRootWindow(MainDisplay);
-    int screen = DefaultScreen(MainDisplay);
+    Display *main_display = XOpenDisplay(0);
+    if(!main_display)
+    {
+	Log("Error! Failed to open x11 display. Are you on X11?");
+    }
+    else
+    {
+	Log("Successfully opened x11 display?\n");
+	Log("Display: %p\n", main_display); 
+    }
 
-    Visual *v = DefaultVisual(MainDisplay, screen);
+    Window root = XDefaultRootWindow(main_display);
+    int screen = DefaultScreen(main_display);
+
+    Visual *v = DefaultVisual(main_display, screen);
 
     XSetWindowAttributes wa = {
 	.background_pixmap = None,
-	.background_pixel = BlackPixel(MainDisplay, DefaultScreen(MainDisplay)),
+	.background_pixel = BlackPixel(main_display, DefaultScreen(main_display)),
 	.border_pixmap = CopyFromParent,
 	.border_pixel= 0,
 	.bit_gravity = ForgetGravity,
@@ -27,7 +37,7 @@ linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u3
     };
 
     Window window = XCreateWindow(
-	MainDisplay,            // display
+	main_display,            // display
 	root,                   // parent
 	disp_x,                 // x
 	disp_y,                 // y
@@ -40,15 +50,15 @@ linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u3
 	CWBackPixel,            // visual
 	&wa);
 
-    XSetWindowBorder(MainDisplay, window, 60);
-    XSelectInput(MainDisplay, window, ExposureMask | StructureNotifyMask | KeyReleaseMask | KeyPressMask);
-    XMapWindow(MainDisplay, window);
-    XEvent event;
+    XSetWindowBorder(main_display, window, 60);
+    XSelectInput(main_display, window, ExposureMask | StructureNotifyMask | KeyReleaseMask | KeyPressMask);
+    XMapWindow(main_display, window);
 
     return {
-
-
-    };
+	    main_display,
+	    window,
+	    screen,
+	};
 }
 
 internal void
@@ -66,11 +76,39 @@ draw_to_window(linux_x11_win *s)
 internal s32
 linux_x11_cleanup(linux_x11_win *s)
 {
-    
     XCloseDisplay(s->display);
+    return 0;
 
-    // TODO: ...
+}
+
+
+internal int
+linux_x11_read_input()
+{
 
     return 0;
+}
+
+
+
+internal void
+library_open(String8 path)
+{
+
+    int result = dlopen(path);
+    if(result)
+    {
+	Log("Failed to open library not available");
+	return;
+    }
+
+}
+
+
+internal void
+library_close(String8 path)
+{
+
+    dlclose(path);
 
 }

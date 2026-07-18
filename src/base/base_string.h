@@ -120,8 +120,8 @@ ReadOnly global_variable String8  nil_str8  = {NULL, 0};
 ReadOnly global_variable String16 nil_str16 = {NULL, 0};
 ReadOnly global_variable String32 nil_str32 = {NULL, 0};
 
-ReadOnly global_variable String8Node  nil_str8_node  = {NULL, NULL};
-ReadOnly global_variable String16Node nil_str16_node = {NULL, NULL};
-ReadOnly global_variable String32Node nil_str32_node = {NULL, NULL};
+ReadOnly global_variable String8Node  nil_str8_node  = {NULL, {NULL}};
+ReadOnly global_variable String16Node nil_str16_node = {NULL, {NULL}};
+ReadOnly global_variable String32Node nil_str32_node = {NULL, {NULL}};
 
 #endif /* BASE_STRING_H */

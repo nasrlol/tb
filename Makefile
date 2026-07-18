@@ -1,9 +1,9 @@
 .PHONY: all clean
 
 DIRECTORY := $(shell pwd)
-COMPILER := g++
+COMPILER := clang++
 INCLUDE := -I$(DIRECTORY)/src/code -I$(DIRECTORY)/src -I$(DIRECTORY)/src/base
-OPTIONS := -g -fpermissive -Wno-unused-function -Wno-unused-variable -fsanitize=address -Wall -Werror -D_GNU_SOURCE 
+OPTIONS := -g -fpermissive -Wno-unused-function -Wno-unused-variable -fsanitize=address -Wall -Werror -D_GNU_SOURCE  -Wno-unused-function
 
 CFLAGS += $(shell pkg-config --cflags x11)
 LDFLAGS += $(shell pkg-config --libs x11)
