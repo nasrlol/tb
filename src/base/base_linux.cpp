@@ -55,10 +55,10 @@ linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u3
     XMapWindow(main_display, window);
 
     return {
-	    main_display,
-	    window,
-	    screen,
-	};
+	main_display,
+	window,
+	screen,
+    };
 }
 
 internal void
@@ -94,30 +94,32 @@ x11_read_input()
 //-
 
 internal Library 
-unix_library_load(MemArena *Arena, String8 path)
+unix_library_load(MemArena *arena, String8 path)
 {
 
-    const char *cstring_path = null_terminate(path);
+    const char *cstring_path = null_terminate(arena, &path);
     void *lib = dlopen((const char *)path.data, RTLD_LAZY|RTLD_LOCAL);
-    lib = { (u64)lib } ;
-
-
-
+    return { (u64)lib } ;
+    
 }
 
 internal void *
 unix_library_get_proc(Library *library, String8 proc_name)
 {
 
+    return NULL;
 }
 
 
 internal int  
 unix_library_close(Library *library)
 {
+    int result = dlclose(library);
 
-    if(dlclose(library))
+    if(result)
     {
+
     }
 
+    return result;
 }

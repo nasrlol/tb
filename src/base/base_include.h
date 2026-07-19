@@ -82,6 +82,7 @@
 #endif
 
 #include "base_platform.h"
+#include "base_platform.cpp"
 
 #endif
 

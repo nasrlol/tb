@@ -11,5 +11,10 @@ struct linux_x11_win
   s32 screen;
 };
 
+typedef struct Library Library;
+struct Library
+{
+    u64 data;
+};
 
 #endif // BASE_LINUX_H

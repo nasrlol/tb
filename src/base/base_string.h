@@ -88,7 +88,7 @@ internal b32 cstring_is_match(u8 *a, u8 *b);
 //- string8 
 internal u64     str8_skip_element(String8 *buffer, u64 start_pos, String8 *element);
 internal u64     str8_find_element(String8 *buffer, u64 start_pos, String8 *element);
-internal b32     str8_is_match(String8 *a, String8 *b);
+internal b32     str8_is_match(String8 a, String8 b);
 internal void    str8_append_u8_element(String8 *buf, u8 c);
 internal void    str8_append_str8_element(String8 *a, String8 *b);
 internal void    str8_trim_right();
@@ -96,20 +96,28 @@ internal String8 str8_chop_left(String8 buffer, u64 count);
 internal String8 str8_chop_right(String8 buffer, u64 count);
 internal String8 str8_zero();
 
+#pragma GCC diagnostic push		       
+#pragma GCC diagnostic ignored "-Wconversion"
+
+
 //- macros
 #define PushString8(arena, count) String8 { (u8 *)(PushArrayZero(arena, u8, (count))), (u64)(count)}
 #define PushString16(arena, count) String16 { (u16 *)(PushArrayZero(arena, u16, (count))), (u64)(count)}
 #define PushString32(arena, count) String32 { (u32 *)(PushArrayZero(arena, u32, (count))), (u64)(count)}
 
-#define ToString8(data) String8 { (u8 *)(data), (u64)(cstring8_length(data))}
-#define ToString16(data) String16 { (u16 *)(data), (u64)(cstring16_length(data))}
-#define ToString32(data) String32 { (u32 *)(data), (u64)(cstring32_length(data))}
 
-#define str8(data) ToString8(data)
+#define ToString8(data)  String8  { (u8 *)(data),  (u64)(sizeof(data) - 1)}
+#define ToString16(data) String16 { (u16 *)(data), (u64)(sizeof(data) - 1)}
+#define ToString32(data) String32 { (u32 *)(data), (u64)(sizeof(data) - 1)}
 
-#define StringFmt "%.*s"
-#define ULongFmt "%lu"
-#define ULLongFmt "%llu"
+
+#define str8(buffer) ToString8(buffer)
+
+#pragma GCC diagnostic pop
+
+
+#define Str8Fmt    "%.*s"
+#define Str8Arg(buffer) (u64)((buffer).size), (char *)(buffer).data
 
 internal u64 cstring8_length(u8 *c); 
 internal u64 cstring16_length(u16 *c); 
@@ -123,5 +131,6 @@ ReadOnly global_variable String32 nil_str32 = {NULL, 0};
 ReadOnly global_variable String8Node  nil_str8_node  = {NULL, {NULL}};
 ReadOnly global_variable String16Node nil_str16_node = {NULL, {NULL}};
 ReadOnly global_variable String32Node nil_str32_node = {NULL, {NULL}};
+
 
 #endif /* BASE_STRING_H */

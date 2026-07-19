@@ -2,11 +2,6 @@
 #define BASE_PLATFORM_H
 
 
-typedef struct Library Library;
-struct Library
-{
-    u64 data;
-};
 
 #if PLATFORM_UNIX
 

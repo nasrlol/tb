@@ -16,6 +16,10 @@
       packages = with pkgs; [
         gcc
         gnumake
+  	freetype
+	libx11
+	libxft
+	gdb
       ];
     };
   };
