@@ -1,6 +1,13 @@
 #ifndef BASE_PLATFORM_H
 #define BASE_PLATFORM_H
 
+
+typedef struct Library Library;
+struct Library
+{
+    u64 data;
+};
+
 #if PLATFORM_UNIX
 
 #define PlatformCreateWindow(arena, height, width, xpos, ypos)  
@@ -11,6 +18,7 @@
 #define PlatformLoadLibrary
 #endif
 
+
 #elif PLATFORM_WINDOWS
 
 
@@ -20,6 +28,7 @@
 #define PlatformDrawRect() 
 #define PlatformLoadLibrary
 #endif
+
 
 #else
 #error unsupported platform

@@ -257,4 +257,3 @@ cstring32_length(u32 *c)
 
 }
 
-

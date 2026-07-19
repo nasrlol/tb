@@ -74,7 +74,7 @@ draw_to_window(linux_x11_win *s)
 
 
 internal s32
-linux_x11_cleanup(linux_x11_win *s)
+x11_cleanup(linux_x11_win *s)
 {
     XCloseDisplay(s->display);
     return 0;
@@ -83,7 +83,7 @@ linux_x11_cleanup(linux_x11_win *s)
 
 
 internal int
-linux_x11_read_input()
+x11_read_input()
 {
 
     return 0;
@@ -91,24 +91,33 @@ linux_x11_read_input()
 
 
 
-internal void
-library_open(String8 path)
+//-
+
+internal Library 
+unix_library_load(MemArena *Arena, String8 path)
 {
 
-    int result = dlopen(path);
-    if(result)
-    {
-	Log("Failed to open library not available");
-	return;
-    }
+    const char *cstring_path = null_terminate(path);
+    void *lib = dlopen((const char *)path.data, RTLD_LAZY|RTLD_LOCAL);
+    lib = { (u64)lib } ;
+
+
+
+}
+
+internal void *
+unix_library_get_proc(Library *library, String8 proc_name)
+{
 
 }
 
 
-internal void
-library_close(String8 path)
+internal int  
+unix_library_close(Library *library)
 {
 
-    dlclose(path);
+    if(dlclose(library))
+    {
+    }
 
 }
