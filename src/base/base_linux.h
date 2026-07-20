@@ -1,20 +1,47 @@
 #ifndef BASE_LINUX_H
 #define BASE_LINUX_H
 
-internal int LinuxEntrypoint(MemArena *arena, u32 window_height, u32 window_width, u32 disp_x, u64 disp_y);
+#define X11 1
 
-typedef struct linux_x11_win linux_x11_win;
-struct linux_x11_win
+typedef struct linux_wm_state linux_wm_state;
+struct linux_wm_state
 {
-  Display *display;
-  Window  window;
-  s32 screen;
+    Display *display;
+    Window   window;
+    s32      screen;
 };
+
+
+#if X11
+
+internal linux_wm_state x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u32 disp_x, u32 disp_y);
+internal void x11_draw(linux_wm_state *s, s32 start_x, s32 end_x, s32 start_y, s32 end_y);
+internal s32 x11_cleanup(linux_wm_state *s);
+internal s32 x11_read_input();
+
+
+#define LinuxCreateWindow(arena, height, width, x, y) x11_create_window(arena, height, width, x, y)
+#define LinuxGetDisplayWdith(display, screen_num)      DisplayWidth(display, screen_num)
+#define LinuxGetDisplayHeight(display, screen_num)     DisplayHeight(display, screen_num);
+#define LinuxLoadBitMapFromFile(display, window, path, width, height, out, hotspot_x, hotspot_y)    XReadBitmapFile(display, window, )
 
 typedef struct Library Library;
 struct Library
 {
     u64 data;
 };
+
+
+
+#elif WAYLAND
+
+
+#else
+#error compositor not defined
+#endif
+
+internal Library unix_library_load(MemArena *arena, String8 path);
+internal void   *unix_library_get_proc(Library *library, String8 proc_name);
+internal int     unix_library_close(Library *library);
 
 #endif // BASE_LINUX_H

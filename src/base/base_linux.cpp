@@ -1,6 +1,11 @@
-internal linux_x11_win
-linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u32 disp_x, u32 disp_y)
+internal linux_wm_state
+x11_create_window(MemArena *arena,
+		  u32 window_height,
+		  u32 window_width,
+		  u32 display_x,
+		  u32 display_y)
 {
+
 
     Display *main_display = XOpenDisplay(0);
     if(!main_display)
@@ -10,7 +15,7 @@ linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u3
     else
     {
 	Log("Successfully opened x11 display?\n");
-	Log("Display: %p\n", main_display); 
+	Log("Display: %p\n", main_display);
     }
 
     Window root = XDefaultRootWindow(main_display);
@@ -38,31 +43,29 @@ linux_x11_create_window(MemArena *arena, u32 window_height, u32 window_width, u3
 
     Window window = XCreateWindow(
 	main_display,            // display
-	root,                   // parent
-	disp_x,                 // x
-	disp_y,                 // y
-	window_width,           // width
-	window_height,          // height
-	0,                      // border_width
-	CopyFromParent,         // depth
-	CopyFromParent,         // class
-	v,                      // depth
-	CWBackPixel,            // visual
+	root,                    // parent
+	display_x,               // x
+	display_y,               // y
+	window_width,            // width
+	window_height,           // height
+	0,                       // border_width
+	CopyFromParent,          // depth
+	CopyFromParent,          // class
+	v,                       // depth
+	CWBackPixel,             // visual
 	&wa);
 
     XSetWindowBorder(main_display, window, 60);
     XSelectInput(main_display, window, ExposureMask | StructureNotifyMask | KeyReleaseMask | KeyPressMask);
     XMapWindow(main_display, window);
+    linux_wm_state out = { main_display, window, screen };
 
-    return {
-	main_display,
-	window,
-	screen,
-    };
+    return out;
+    
 }
 
 internal void
-draw_to_window(linux_x11_win *s)
+x11_draw(linux_wm_state *s, s32 start_x, s32 end_x, s32 start_y, s32 end_y)
 {
 
     u32 color = 0x55ffaaff;
@@ -74,7 +77,7 @@ draw_to_window(linux_x11_win *s)
 
 
 internal s32
-x11_cleanup(linux_x11_win *s)
+x11_cleanup(linux_wm_state *s)
 {
     XCloseDisplay(s->display);
     return 0;
@@ -82,7 +85,7 @@ x11_cleanup(linux_x11_win *s)
 }
 
 
-internal int
+internal s32
 x11_read_input()
 {
 
@@ -90,17 +93,16 @@ x11_read_input()
 }
 
 
-
 //-
 
-internal Library 
+internal Library
 unix_library_load(MemArena *arena, String8 path)
 {
 
     const char *cstring_path = null_terminate(arena, &path);
     void *lib = dlopen((const char *)path.data, RTLD_LAZY|RTLD_LOCAL);
     return { (u64)lib } ;
-    
+
 }
 
 internal void *
@@ -111,7 +113,7 @@ unix_library_get_proc(Library *library, String8 proc_name)
 }
 
 
-internal int  
+internal int
 unix_library_close(Library *library)
 {
     int result = dlclose(library);
@@ -122,4 +124,14 @@ unix_library_close(Library *library)
     }
 
     return result;
+}
+
+
+//-
+
+internal u64
+x11_load_bitmap_from_file()
+{
+
+    return 0;
 }

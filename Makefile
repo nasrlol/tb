@@ -3,7 +3,7 @@
 DIRECTORY := $(shell pwd)
 COMPILER := g++
 INCLUDE := -I$(DIRECTORY)/src/code -I$(DIRECTORY)/src -I$(DIRECTORY)/src/base
-OPTIONS := -g -O1 -Wno-unused-function -Wno-unused-variable  -Wall -Werror -D_GNU_SOURCE   # -fsanitize=address
+OPTIONS := -g  -O1 -Wno-unused-function -Wno-unused-variable  -Wall -Werror -D_GNU_SOURCE   # -fsanitize=address
 
 CFLAGS += $(shell pkg-config --cflags x11)
 LDFLAGS += $(shell pkg-config --libs x11)
