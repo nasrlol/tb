@@ -4,3 +4,6 @@ idea/*
 .idea
 /build
 tags
+/vc140.pdb
+/program.nativecodeanalysis.xml
+/program.obj

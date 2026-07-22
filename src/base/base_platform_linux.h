@@ -31,10 +31,7 @@ struct Library
     u64 data;
 };
 
-
-
 #elif WAYLAND
-
 
 #else
 #error compositor not defined
@@ -43,5 +40,10 @@ struct Library
 internal Library unix_library_load(MemArena *arena, String8 path);
 internal void   *unix_library_get_proc(Library *library, String8 proc_name);
 internal int     unix_library_close(Library *library);
+internal b32 unix_file_exists(String8 path);
+internal String8 unix_file_load(MemArena *arena, String8 path);
+internal String8 unix_file_write(String8 data, String8 path);
+internal void unix_log_with_args(const char *format, ...);
+internal b32 unix_os_exit();
 
 #endif // BASE_LINUX_H

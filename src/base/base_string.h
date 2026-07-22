@@ -75,7 +75,7 @@ struct String32List
     u64           count;
 };
 
-//- cstring 
+//- cstring
 internal b32 cstring_is_alnum(u8 point);
 internal b32 cstring_is_nil(u8 point);
 internal b32 cstring_is_whitespace(u8 point);
@@ -85,7 +85,7 @@ internal b32 cstring_is_digit(u8 point);
 internal b32 cstring_is_newline(u8 point);
 internal b32 cstring_is_match(u8 *a, u8 *b);
 
-//- string8 
+//- string8
 internal u64     str8_skip_element(String8 *buffer, u64 start_pos, String8 *element);
 internal u64     str8_find_element(String8 *buffer, u64 start_pos, String8 *element);
 internal b32     str8_is_match(String8 a, String8 b);
@@ -96,8 +96,10 @@ internal String8 str8_chop_left(String8 buffer, u64 count);
 internal String8 str8_chop_right(String8 buffer, u64 count);
 internal String8 str8_zero();
 
-#pragma GCC diagnostic push		       
+#if COMPILER_GCC
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
+#endif
 
 
 //- macros
@@ -113,15 +115,17 @@ internal String8 str8_zero();
 
 #define str8(buffer) ToString8(buffer)
 
+#if COMPILER_GCC
 #pragma GCC diagnostic pop
+#endif
 
 
 #define Str8Fmt    "%.*s"
 #define Str8Arg(buffer) (u64)((buffer).size), (char *)(buffer).data
 
-internal u64 cstring8_length(u8 *c); 
-internal u64 cstring16_length(u16 *c); 
-internal u64 cstring32_length(u32 *c); 
+internal u64 cstring8_length(u8 *c);
+internal u64 cstring16_length(u16 *c);
+internal u64 cstring32_length(u32 *c);
 
 //-
 ReadOnly global_variable String8  nil_str8  = {NULL, 0};
